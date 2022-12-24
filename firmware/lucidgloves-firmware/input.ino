@@ -107,18 +107,18 @@ int analogPinRead(int pin){
     return analogRead(pin);
   }
   #else
-   return analogRead(UNMUX(pin));
+   return analogRead(f(pin));
   #endif
 }
 
 #if USING_MULTIPLEXER
 int readMux(byte pin){
+  int retInt = 0;
   /*byte selectPins[] = {PINS_MUX_SELECT}; //get the array of select pins for the mux
 
   for (int i = sizeof(selectPins - 1); i > -1; i--){
     digitalWrite(selectPins[i], ((int)pow(2,i) & (pin)) == 0 ? LOW:HIGH); //convert the pin number to binary, and set each digit to it's corresponsing select pin.
   }
-
   */
   switch(pin){
     case 0:
@@ -219,7 +219,57 @@ int readMux(byte pin){
       break;
   }
   delayMicroseconds(MULTIPLEXER_DELAY);
-  return analogRead(MUX_INPUT);
+  retInt = analogRead(MUX_INPUT);
+
+  switch(MUX(pin)) {
+    case PIN_THUMB:
+      debugData[0] = retInt;    
+      break;
+    case PIN_INDEX:
+      debugData[1] = retInt;    
+      break;
+    case PIN_MIDDLE:
+      debugData[2] = retInt;    
+      break;
+    case PIN_RING:
+      debugData[3] = retInt;    
+      break;
+    case PIN_PINKY:
+      debugData[4] = retInt;    
+      break;
+    case PIN_THUMB_SECOND:
+      debugData[5] = retInt;    
+      break;
+    case PIN_INDEX_SECOND:
+      debugData[6] = retInt;    
+      break;
+    case PIN_MIDDLE_SECOND:
+      debugData[7] = retInt;    
+      break;
+    case PIN_RING_SECOND:
+      debugData[8] = retInt;    
+      break;
+    case PIN_PINKY_SECOND:
+      debugData[9] = retInt;    
+      break;
+    case PIN_THUMB_SPLAY:
+      debugData[10] = retInt;    
+      break;
+    case PIN_INDEX_SPLAY:
+      debugData[11] = retInt;    
+      break;
+    case PIN_MIDDLE_SPLAY:
+      debugData[12] = retInt;    
+      break;
+    case PIN_RING_SPLAY:
+      debugData[13] = retInt;    
+      break;
+    case PIN_PINKY_SPLAY:
+      debugData[14] = retInt;    
+      break;
+  }
+
+  return retInt;
 }
 #endif
 
@@ -243,7 +293,7 @@ void getFingerPositions(bool calibrating, bool reset){
                               analogPinRead(PIN_INDEX_SPLAY), 
                               analogPinRead(PIN_MIDDLE_SPLAY), 
                               analogPinRead(PIN_RING_SPLAY), 
-                              analogPinRead(PIN_PINKY_SPLAY)};
+                              analogPinRead(PIN_PINKY_SPLAY)};                         
   #else
     int rawFingersSplay[5] = {0,0,0,0,0};
   #endif
@@ -356,7 +406,6 @@ bool getButton(byte pin){
 }
 
 #if FLEXION_MIXING == MIXING_SINCOS
-//mixing
 int sinCosMix(int sinPin, int cosPin, int i){
 
   int sinRaw = analogPinRead(sinPin);
@@ -400,8 +449,63 @@ int sinCosMix(int sinPin, int cosPin, int i){
   atanPositive[i] = angleRaw > 0;
   double totalAngle = angleRaw + 2*PI * totalOffset1[i];
   
+  int resval = (int)(totalAngle * ANALOG_MAX);
+  if(i == 0) {
+    comm->output(debugSig(sinRaw, cosRaw, sinMin[i], sinMax[i], cosMin[i], cosMax[i], sinScaled, cosScaled, angleRaw, totalAngle, resval, 0));
+  } 
+  return resval; 
+}
+#else 
+//mixing
+int sinCosMix(int sinPin, int cosPin, int i){
 
-  return (int)(totalAngle * ANALOG_MAX);
+  int sinRaw = analogPinRead(sinPin);
+  int cosRaw = analogPinRead(cosPin);
+
+
+  #if INTERFILTER_MODE != INTERFILTER_NONE
+    sinSamples[i].add(sinRaw);
+    cosSamples[i].add(cosRaw);
+    int sinCalib = sinSamples[i].getMedian();
+    int cosCalib = cosSamples[i].getMedian();
+    #if INTERFILTER_MODE == INTERFILTER_ALL
+      sinRaw = sinCalib;
+      cosRaw = cosCalib;
+    #endif
+  #else
+    int sinCalib = sinRaw;
+    int cosCalib = cosRaw;
+  #endif 
+
+  #if INTERMEDIATE_CALIBRATION
+  //scaling
+  sinMin[i] = min(sinCalib, sinMin[i]);
+  sinMax[i] = max(sinCalib, sinMax[i]);
+
+  cosMin[i] = min(cosCalib, cosMin[i]);
+  cosMax[i] = max(cosCalib, cosMax[i]);
+  #endif
+
+  int sinScaled = map(sinRaw, sinMin[i], sinMax[i], -ANALOG_MAX, ANALOG_MAX);
+  int cosScaled = map(cosRaw, cosMin[i], cosMax[i], -ANALOG_MAX, ANALOG_MAX);
+
+  
+  //trigonometry stuffs
+  double angleRaw = atan2(sinScaled, cosScaled);
+
+  //counting rotations
+  if (((angleRaw > 0) != atanPositive[i]) && sinScaled > cosScaled){
+    totalOffset1[i] += atanPositive[i]?1:-1;
+  }
+  atanPositive[i] = angleRaw > 0;
+  double totalAngle = angleRaw + 2*PI * totalOffset1[i];
+  
+  int totindeg = totalAngle * RAD_TO_DEG;
+  int scaletotal = map(totindeg, -360, 360, 0, ANALOG_MAX);
+/* if(i == 0) {
+    comm->output(debugSig(sinRaw, cosRaw, sinMin[i], sinMax[i], cosMin[i], cosMax[i], sinScaled, cosScaled, angleRaw, totalAngle, totindeg, scaletotal));
+  } */
+  return scaletotal;
   
 }
 #endif

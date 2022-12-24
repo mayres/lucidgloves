@@ -9,7 +9,7 @@
 bool calibrate = false;
 bool calibButton = false;
 int* fingerPos = (int[]){0,0,0,0,0,0,0,0,0,0};
-
+int* debugData = (int[]){0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 ICommunication* comm;
 
 #if ESP32_DUAL_CORE_SET
@@ -146,6 +146,7 @@ void loop() {
     #endif
 
     int fingerPosCopy[10];
+    int debugCopy[15];
     int mutexTimeDone;
     bool menuButton = getButton(PIN_MENU_BTN) != INVERT_MENU;
     {
@@ -159,20 +160,36 @@ void loop() {
       for (int i = 0; i < 10; i++){
         fingerPosCopy[i] = fingerPos[i];
       }
+      for (int i = 0; i < 15; i++){
+        debugCopy[i] = debugData[i];
+      }
+
       #if ESP32_DUAL_CORE_SET
       fingerPosLock->unlock();
       #endif
       
     }
 
-    comm->output(encode(fingerPosCopy, getJoyX(), getJoyY(), joyButton, triggerButton, aButton, bButton, grabButton, pinchButton, calibButton, menuButton));
+    // disable all buttons (except calib)
+    menuButton = false;
+    joyButton = false;
+    triggerButton = false;
+    aButton = false; 
+    bButton = false;
+    grabButton = false; 
+    pinchButton = false;
+
+   // comm->output(debugout(debugCopy));
+   // comm->output(encode(fingerPosCopy, getJoyX(), getJoyY(), joyButton, triggerButton, aButton, bButton, grabButton, pinchButton, calibButton, menuButton));
     #if USING_FORCE_FEEDBACK
       char received[100];
       if (comm->readData(received)){
         int hapticLimits[5];
         //This check is a temporary hack to fix an issue with haptics on v0.5 of the driver, will make it more snobby code later
-        if(String(received).length() >= 10) {
+        int len = String(received).length();
+        if(len >= 10 && len <=25 && received[0] == 'A') {
            decodeData(received, hapticLimits);
+           //comm->output(encodeHaptics("intent", hapticLimits));
            writeServoHaptics(hapticLimits); 
         }
       }

@@ -1,7 +1,7 @@
 //Advanced settings, only for the pros XD
 
 #define LOOP_TIME 1 //How much time between data sends (ms), set to 0 for a good time :)
-#define CALIBRATION_LOOPS -1//How many loops should be calibrated. Set to -1 to always be calibrated.
+#define CALIBRATION_LOOPS 100//How many loops should be calibrated. Set to -1 to always be calibrated.
 
 //Encoding
 #define ENCODING ENCODE_ALPHA
@@ -59,8 +59,8 @@
 #define MEDIAN_SAMPLES 10
 
 //intermediate filtering. Options are INTERFILTER_NONE, INTERFILTER_LIMITS (filter is only used for limit calib), INTERFILTER_ALL (filter all the way)
-#define INTERFILTER_MODE INTERFILTER_NONE
-#define INTERFILTER_SAMPLES 100
+#define INTERFILTER_MODE INTERFILTER_ALL
+#define INTERFILTER_SAMPLES 10
 
 //ESP dual core hardware check
 #if defined(ESP32) && ESP32_DUAL_CORE

@@ -21,12 +21,12 @@ void setupServoHaptics(){
 }
 
 //static scaling, maps to entire range of servo
-void scaleLimits(int* hapticLimits, float* scaledLimits){
+void scaleLimits(int* hapticLimits, int* scaledLimits){
   for (int i = 0; i < 5; i++){
     #if FLIP_FORCE_FEEDBACK
-    scaledLimits[i] = hapticLimits[i] / 1000.0f * 180.0f;
+    scaledLimits[i] = round(hapticLimits[i] / 1000.0f * 180.0f);
     #else
-    scaledLimits[i] = 180.0f - hapticLimits[i] / 1000.0f * 180.0f;
+    scaledLimits[i] = round(180.0f - hapticLimits[i] / 1000.0f * 180.0f);
     #endif
   }
   
@@ -47,8 +47,10 @@ void dynScaleLimits(int* hapticLimits, float* scaledLimits){
 }
 
 void writeServoHaptics(int* hapticLimits){
-  float scaledLimits[5];
+
+  int scaledLimits[5];
   scaleLimits(hapticLimits, scaledLimits);
+  //comm->output(encodeHaptics("sending", scaledLimits));
   pinkyServo.write(scaledLimits[4]);
   ringServo.write(scaledLimits[3]);
   middleServo.write(scaledLimits[2]);
