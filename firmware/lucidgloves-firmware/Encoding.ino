@@ -15,9 +15,24 @@ struct outputData{
 };
 */
 
-char* debugSig(int sinRaw, int cosRaw, int sinMin, int cosMax, int cosMin, int sinMax, int sinScaled, int cosScaled, double angleRaw, double totalAngle, int indeg, int scaletot) {
+
+boolean flipflexon = FLIP_FLEXION;
+boolean debugon = false;
+int debugpos = 0;
+unsigned long debuglastup = 0;
+int debugint = 100;
+int fudge = 0;
+
+
+char* debugSig(int sinRaw, int cosRaw, int sinMin, int sinMax, int cosMin, int cosMax, double sinScaled, double cosScaled, double angleRaw, double totalAngle, int indeg, int scaletot) {
   static char stringToEncode[200];
-  sprintf(stringToEncode, "SIN[%d,%d,%d,%d] COS[%d,%d,%d,%d] ANG[%.3f] TOTANG[%.3f, %d, %d]\n", sinRaw, sinMin, sinMax, sinScaled, cosRaw,  cosMin, cosMax, cosScaled, angleRaw, totalAngle, indeg, scaletot);
+  sprintf(stringToEncode, "SIN[%d,%d,%d,%.3f] COS[%d,%d,%d,%.3f] ANG[%.3f] TOTANG[%.3f, %d, %d]\n", sinRaw, sinMin, sinMax, sinScaled, cosRaw,  cosMin, cosMax, cosScaled, angleRaw, totalAngle, indeg, scaletot);
+  return stringToEncode;
+}
+
+char* debugFingerPos(int rawFinger, int minFinger, int maxFinger, int fingerPos) {
+  static char stringToEncode[100];
+  sprintf(stringToEncode, "raw[%d] min[%d] max[%d] Final[%d]\n", rawFinger, minFinger, maxFinger, fingerPos);
   return stringToEncode;
 }
 
@@ -63,13 +78,30 @@ char* encode(int* flexion, int joyX, int joyY, bool joyClick, bool triggerButton
   static char stringToEncode[75];
   int trigger = (flexion[1] > ANALOG_MAX/2) ? (flexion[1] - ANALOG_MAX/2) * 2:0;
   #if USING_SPLAY
-  sprintf(stringToEncode, "A%4dB%4dC%4dD%4dE%4dF%dG%dP%d%s%s%s%s%s%s%s%s(AB)%4d(BB)%4d(CB)%4d(DB)%4d(EB)%4d\n", 
-//  sprintf(stringToEncode, "A%dB%dC%dD%dE%dF%dG%dP%d%s%s%s%s%s%s%s%s(AB)%d(BB)%d(CB)%d(DB)%d(EB)%d\n", 
+
+      if(debugon) {   
+      unsigned long current = millis();          
+      if(current - debuglastup > 5000) {        
+         debugpos += debugint;
+         if(debugpos > 4095) debugpos = 0;
+         debuglastup = current;
+      }
+      sprintf(stringToEncode, "A%dB%dC%dD%dE%dF%dG%dP%d%s%s%s%s%s%s%s%s(AB)%d(BB)%d(CB)%d(DB)%d(EB)%d\n", 
+  debugpos, debugpos, debugpos, debugpos, debugpos,
+  joyX, joyY, trigger, joyClick?"H":"",
+  triggerButton?"I":"", aButton?"J":"", bButton?"K":"", grab?"L":"", pinch?"M":"", menu?"N":"", calib?"O":"",
+  flexion[5], flexion[6], flexion[7], flexion[8], flexion[9]
+  );
+    }
+    else {
+//  sprintf(stringToEncode, "A%4dB%4dC%4dD%4dE%4dF%dG%dP%d%s%s%s%s%s%s%s%s(AB)%4d(BB)%4d(CB)%4d(DB)%4d(EB)%4d\n", 
+  sprintf(stringToEncode, "A%dB%dC%dD%dE%dF%dG%dP%d%s%s%s%s%s%s%s%s(AB)%d(BB)%d(CB)%d(DB)%d(EB)%d\n", 
   flexion[0], flexion[1], flexion[2], flexion[3], flexion[4],
   joyX, joyY, trigger, joyClick?"H":"",
   triggerButton?"I":"", aButton?"J":"", bButton?"K":"", grab?"L":"", pinch?"M":"", menu?"N":"", calib?"O":"",
   flexion[5], flexion[6], flexion[7], flexion[8], flexion[9]
   );
+    }
   #else
   sprintf(stringToEncode, "A%dB%dC%dD%dE%dF%dG%dP%d%s%s%s%s%s%s%s%s\n", 
   flexion[0], flexion[1], flexion[2], flexion[3], flexion[4],
@@ -88,11 +120,12 @@ char* encodeHaptics(String msg, int* haptics) {
 
 //legacy decoding
 void decodeData(char* stringToDecode, int* hapticLimits){
-  hapticLimits[0] = getArgument(stringToDecode, 'A'); //thumb
-  hapticLimits[1] = getArgument(stringToDecode, 'B'); //index
-  hapticLimits[2] = getArgument(stringToDecode, 'C'); //middle
-  hapticLimits[3] = getArgument(stringToDecode, 'D'); //ring
-  hapticLimits[4] = getArgument(stringToDecode, 'E'); //pinky
+  // offset by physical min, AND limit to 1000 for max.
+  hapticLimits[0] = min(THUMB_SERV_MIN + getArgument(stringToDecode, 'A'), 1000); //thumb
+  hapticLimits[1] = min(INDEX_SERV_MIN + getArgument(stringToDecode, 'B'), 1000); //index
+  hapticLimits[2] = min(MIDDLE_SERV_MIN + getArgument(stringToDecode, 'C'), 1000); //middle
+  hapticLimits[3] = min(RING_SERV_MIN + getArgument(stringToDecode, 'D'), 1000); //ring
+  hapticLimits[4] = min(PINKY_SERV_MIN + getArgument(stringToDecode, 'E'), 1000); //pinky
   //Serial.println("Haptic: "+ (String)hapticLimits[0] + " " + (String)hapticLimits[1] + " " + (String)hapticLimits[2] + " " + (String)hapticLimits[3] + " " + (String)hapticLimits[4] + " ");
 }
 

@@ -12,6 +12,7 @@ int* fingerPos = (int[]){0,0,0,0,0,0,0,0,0,0};
 int* debugData = (int[]){0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 ICommunication* comm;
 
+
 #if ESP32_DUAL_CORE_SET
 //std::mutex fingerPosMutex;
 ordered_lock* fingerPosLock = new ordered_lock();
@@ -100,7 +101,7 @@ void loop() {
     latch = false;
   
   if (comm->isOpen()){
-    #if USING_CALIB_PIN
+#if USING_CALIB_PIN
     calibButton = getButton(PIN_CALIB) != INVERT_CALIB;
     //Serial.println(getButton(PIN_CALIB));
     if (calibButton)
@@ -180,7 +181,7 @@ void loop() {
     pinchButton = false;
 
    // comm->output(debugout(debugCopy));
-   // comm->output(encode(fingerPosCopy, getJoyX(), getJoyY(), joyButton, triggerButton, aButton, bButton, grabButton, pinchButton, calibButton, menuButton));
+    comm->output(encode(fingerPosCopy, getJoyX(), getJoyY(), joyButton, triggerButton, aButton, bButton, grabButton, pinchButton, calibButton, menuButton));
     #if USING_FORCE_FEEDBACK
       char received[100];
       if (comm->readData(received)){
@@ -191,6 +192,17 @@ void loop() {
            decodeData(received, hapticLimits);
            //comm->output(encodeHaptics("intent", hapticLimits));
            writeServoHaptics(hapticLimits); 
+        }
+        else if (received[0] == 'D')  {         
+          if(received[1] == 'O' && received[2] == 'F') debugon = false;
+          if(received[1] == 'O' && received[2] == 'N') debugon = true;
+          if(received[1] == 'F') flipflexon = !flipflexon;
+          if(received[1] == 'I') {
+            debugint = getArgument(received, 'I');            
+          }
+        }
+        else if (received[0] == 'F')  { 
+          fudge = getArgument(received, 'F'); 
         }
       }
     #endif

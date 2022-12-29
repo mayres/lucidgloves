@@ -1,7 +1,7 @@
 //Advanced settings, only for the pros XD
 
 #define LOOP_TIME 1 //How much time between data sends (ms), set to 0 for a good time :)
-#define CALIBRATION_LOOPS 100//How many loops should be calibrated. Set to -1 to always be calibrated.
+#define CALIBRATION_LOOPS -1//How many loops should be calibrated. Set to -1 to always be calibrated.
 
 //Encoding
 #define ENCODING ENCODE_ALPHA
@@ -18,6 +18,12 @@
 #define INTER_MAX 1500 //only used if intermediate calibration is false
 #define INTER_MIN 1200 //only used if intermediate calibration is false
 
+// servo minimums
+#define THUMB_SERV_MIN 110
+#define INDEX_SERV_MIN 0
+#define MIDDLE_SERV_MIN 120
+#define RING_SERV_MIN 120
+#define PINKY_SERV_MIN 25
 
 //Finger indeces (not used for legacy)
 #define PINKY_IND 4
@@ -53,14 +59,16 @@
 #define CLAMP_MIN 0  //the minimum value from the flexion sensors
 #define CLAMP_MAX ANALOG_MAX  //the maximum value from the flexion sensors
 
+#define MIN_SAMPLES 100
+
 // You must install RunningMedian library to use this feature
 // https://www.arduino.cc/reference/en/libraries/runningmedian/
-#define ENABLE_MEDIAN_FILTER false //use the median of the previous values, helps reduce noise
+#define ENABLE_MEDIAN_FILTER true //use the median of the previous values, helps reduce noise
 #define MEDIAN_SAMPLES 10
 
 //intermediate filtering. Options are INTERFILTER_NONE, INTERFILTER_LIMITS (filter is only used for limit calib), INTERFILTER_ALL (filter all the way)
 #define INTERFILTER_MODE INTERFILTER_ALL
-#define INTERFILTER_SAMPLES 10
+#define INTERFILTER_SAMPLES 99
 
 //ESP dual core hardware check
 #if defined(ESP32) && ESP32_DUAL_CORE

@@ -20,8 +20,8 @@
 //ANALOG INPUT CONFIG
 #define USING_SPLAY true //whether or not your glove tracks splay. - tracks the side to side "wag" of fingers. Requires 5 more inputs.
 #define USING_MULTIPLEXER true //Whether or not you are using a multiplexer for inputs
-#define FLIP_FLEXION  true  //Flip values from potentiometers (for fingers!) if they are backwards
-#define FLIP_SPLAY false //Flip values for splay
+#define FLIP_FLEXION  false  //Flip values from potentiometers (for fingers!) if they are backwards
+#define FLIP_SPLAY true //Flip values for splay
 
 
 //Gesture enables, make false to use button override
@@ -55,7 +55,7 @@
 
 #define USING_CALIB_PIN true //When PIN_CALIB is shorted (or it's button pushed) it will reset calibration if this is on.
 
-#define USING_FORCE_FEEDBACK false //Force feedback haptics allow you to feel the solid objects you hold
+#define USING_FORCE_FEEDBACK true //Force feedback haptics allow you to feel the solid objects you hold
 #define FLIP_FORCE_FEEDBACK true
 #define SERVO_SCALING false //dynamic scaling of servo motors
 

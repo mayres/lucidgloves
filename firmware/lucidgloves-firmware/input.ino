@@ -62,6 +62,12 @@ int minFingers[10] = {ANALOG_MAX, ANALOG_MAX, ANALOG_MAX, ANALOG_MAX, ANALOG_MAX
 
   bool atanPositive[8] = {true, true, true, true, true, true, true, true};
 
+  double angMin[5] = {4096.0,4096.0,4096.0,4096.0,4096.0};
+  double angMax[5] = {0.0,0.0,0.0,0.0,0.0};
+  double angPrev[5] = {0.0,0.0,0.0,0.0,0.0};
+  double angStart[5] = {0.0,0.0,0.0,0.0,0.0};
+  boolean startSet[5] = {false,false,false,false,false};
+  int samples = 0;
 
   int totalOffset1[5] = {0,0,0,0,0};
 #endif
@@ -107,7 +113,7 @@ int analogPinRead(int pin){
     return analogRead(pin);
   }
   #else
-   return analogRead(f(pin));
+   return analogRead(UNMUX(pin));
   #endif
 }
 
@@ -220,7 +226,9 @@ int readMux(byte pin){
   }
   delayMicroseconds(MULTIPLEXER_DELAY);
   retInt = analogRead(MUX_INPUT);
-
+ delayMicroseconds(MULTIPLEXER_DELAY);
+  retInt = analogRead(MUX_INPUT);
+ 
   switch(MUX(pin)) {
     case PIN_THUMB:
       debugData[0] = retInt;    
@@ -307,11 +315,11 @@ void getFingerPositions(bool calibrating, bool reset){
   
   
   //flip pot values if needed
-  #if FLIP_FLEXION
+  if(flipflexon) {
   for (int i = 0; i < 5; i++){
     rawFingers[i] = ANALOG_MAX - rawFingers[i];
   }
-  #endif
+  }
   
   #if FLIP_SPLAY
   for (int i = 5; i < 10; i++){
@@ -330,12 +338,24 @@ void getFingerPositions(bool calibrating, bool reset){
   if (reset){
     for (int i = 0; i <10; i++){
       #if FLEXION_MIXING == MIXING_SINCOS
-      if (i < 5)
+      if (i < 5) {
         totalOffset1[i] = 0;
+        sinMax[i] = 0;
+        sinMin[i] = ANALOG_MAX;
+        cosMax[i] = 0;
+        cosMin[i] = ANALOG_MAX;  
+        angMin[i] = ANALOG_MAX;
+        angMax[i] = 0;
+        startSet[i] =false;
+        angStart[i] = 0.0;
+        angPrev[i] = 0.0;
+      }        
       #endif
       maxFingers[i] = INT_MIN;
       minFingers[i] = INT_MAX;
     }
+    samples = 0;    
+    debugpos = 0;
   }
   
   //if during the calibration sequence, make sure to update max and mins
@@ -358,7 +378,14 @@ void getFingerPositions(bool calibrating, bool reset){
   
   for (int i = 0; i<10; i++){
     if (minFingers[i] != maxFingers[i]){
+      if(fudge > 0){
+        int diff = maxFingers[i] - minFingers[i];
+        diff = diff / fudge;
+        fingerPos[i] = map( rawFingers[i], minFingers[i]+diff, maxFingers[i]+diff, 0, ANALOG_MAX);        
+      }
+      else {
       fingerPos[i] = map( rawFingers[i], minFingers[i], maxFingers[i], 0, ANALOG_MAX );
+      }
       #if CLAMP_ANALOG_MAP
         if (fingerPos[i] < 0)
           fingerPos[i] = 0;
@@ -370,6 +397,9 @@ void getFingerPositions(bool calibrating, bool reset){
       fingerPos[i] = ANALOG_MAX / 2;
     }
     
+    //comm->output(debugFingerPos(rawFingers[0], minFingers[0], maxFingers[0], fingerPos[0]));
+    samples++;
+    if(samples < 0) samples = MIN_SAMPLES;  // if we flipped reset showing we have the minimum.
   }
 }
 
@@ -406,6 +436,7 @@ bool getButton(byte pin){
 }
 
 #if FLEXION_MIXING == MIXING_SINCOS
+/*
 int sinCosMix(int sinPin, int cosPin, int i){
 
   int sinRaw = analogPinRead(sinPin);
@@ -450,13 +481,21 @@ int sinCosMix(int sinPin, int cosPin, int i){
   double totalAngle = angleRaw + 2*PI * totalOffset1[i];
   
   int resval = (int)(totalAngle * ANALOG_MAX);
-  if(i == 0) {
-    comm->output(debugSig(sinRaw, cosRaw, sinMin[i], sinMax[i], cosMin[i], cosMax[i], sinScaled, cosScaled, angleRaw, totalAngle, resval, 0));
-  } 
+//  if(i == 0) {
+//    comm->output(debugSig(sinRaw, cosRaw, sinMin[i], sinMax[i], cosMin[i], cosMax[i], sinScaled, cosScaled, angleRaw, totalAngle, resval, 0));
+//  } 
   return resval; 
 }
 #else 
+*/
 //mixing
+
+
+double mapDouble(double x, double in_min, double in_max, double out_min, double out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 int sinCosMix(int sinPin, int cosPin, int i){
 
   int sinRaw = analogPinRead(sinPin);
@@ -484,27 +523,36 @@ int sinCosMix(int sinPin, int cosPin, int i){
 
   cosMin[i] = min(cosCalib, cosMin[i]);
   cosMax[i] = max(cosCalib, cosMax[i]);
+
+  if(samples < MIN_SAMPLES || sinMax[i] - sinMin[i] < 50 || cosMax[i] - cosMin[i] < 50) return 0; // needs more calibration...
   #endif
 
-  int sinScaled = map(sinRaw, sinMin[i], sinMax[i], -ANALOG_MAX, ANALOG_MAX);
-  int cosScaled = map(cosRaw, cosMin[i], cosMax[i], -ANALOG_MAX, ANALOG_MAX);
+  double sinScaled = mapDouble(sinRaw, sinMin[i], sinMax[i], -1, 1);
+  double cosScaled = mapDouble(cosRaw, cosMin[i], cosMax[i], -1, 1);
 
-  
   //trigonometry stuffs
   double angleRaw = atan2(sinScaled, cosScaled);
+
+  if(angleRaw < angMin[i]) angMin[i] = angleRaw;
+  if(angleRaw > angMax[i]) angMax[i] = angleRaw; 
 
   //counting rotations
   if (((angleRaw > 0) != atanPositive[i]) && sinScaled > cosScaled){
     totalOffset1[i] += atanPositive[i]?1:-1;
   }
+  else if (((angleRaw < 0) == atanPositive[i]) && sinScaled > cosScaled){
+    totalOffset1[i] += atanPositive[i]?1:-1;
+
+  }
+  
   atanPositive[i] = angleRaw > 0;
   double totalAngle = angleRaw + 2*PI * totalOffset1[i];
   
   int totindeg = totalAngle * RAD_TO_DEG;
   int scaletotal = map(totindeg, -360, 360, 0, ANALOG_MAX);
-/* if(i == 0) {
-    comm->output(debugSig(sinRaw, cosRaw, sinMin[i], sinMax[i], cosMin[i], cosMax[i], sinScaled, cosScaled, angleRaw, totalAngle, totindeg, scaletotal));
-  } */
+ // if(i == 0) {
+  //  comm->output(debugSig(sinRaw, cosRaw, sinMin[i], sinMax[i], cosMin[i], cosMax[i], sinScaled, cosScaled, angleRaw, totalAngle, totindeg, scaletotal));
+  //} 
   return scaletotal;
   
 }
