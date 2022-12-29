@@ -351,8 +351,8 @@ void getFingerPositions(bool calibrating, bool reset){
         angPrev[i] = 0.0;
       }        
       #endif
-      maxFingers[i] = INT_MIN;
-      minFingers[i] = INT_MAX;
+      maxFingers[i] = 0;
+      minFingers[i] = 4096;
     }
     samples = 0;    
     debugpos = 0;
@@ -367,7 +367,7 @@ void getFingerPositions(bool calibrating, bool reset){
         #else
           maxFingers[i] = rawFingers[i];
         #endif
-      if (rawFingers[i] < minFingers[i])
+      if (rawFingers[i] > 0 && rawFingers[i] < minFingers[i])
         #if CLAMP_SENSORS
           minFingers[i] = ( rawFingers[i] >= CLAMP_MIN )? rawFingers[i] : CLAMP_MIN;
         #else
