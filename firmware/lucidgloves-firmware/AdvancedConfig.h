@@ -26,6 +26,14 @@
 #define INDEX_IND 1
 #define THUMB_IND 0
 
+// servo minimums
+#define THUMB_SERV_MIN 110
+#define INDEX_SERV_MIN 0
+#define MIDDLE_SERV_MIN 120
+#define RING_SERV_MIN 120
+#define PINKY_SERV_MIN 25
+
+
 //Automatically set ANALOG_MAX depending on the microcontroller
 #if defined(__AVR__)
 #define ANALOG_MAX 1023
@@ -55,8 +63,8 @@
 
 // You must install RunningMedian library to use this feature
 // https://www.arduino.cc/reference/en/libraries/runningmedian/
-#define ENABLE_MEDIAN_FILTER false //use the median of the previous values, helps reduce noise
-#define MEDIAN_SAMPLES 10
+#define ENABLE_MEDIAN_FILTER true //use the median of the previous values, helps reduce noise
+#define MEDIAN_SAMPLES 5
 
 //intermediate filtering. Options are INTERFILTER_NONE, INTERFILTER_LIMITS (filter is only used for limit calib), INTERFILTER_ALL (filter all the way)
 #define INTERFILTER_MODE INTERFILTER_NONE

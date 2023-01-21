@@ -165,6 +165,13 @@ void loop() {
       
     }
 
+    // disable all buttons (except calib)
+    menuButton = false;
+    joyButton = false;
+    triggerButton = false;
+    aButton = false; 
+    bButton = false;
+
     comm->output(encode(fingerPosCopy, getJoyX(), getJoyY(), joyButton, triggerButton, aButton, bButton, grabButton, pinchButton, calibButton, menuButton));
     #if USING_FORCE_FEEDBACK
       char received[100];

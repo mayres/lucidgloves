@@ -219,6 +219,7 @@ int readMux(byte pin){
       break;
   }
   delayMicroseconds(MULTIPLEXER_DELAY);
+  //analogRead(MUX_INPUT);
   return analogRead(MUX_INPUT);
 }
 #endif
@@ -291,13 +292,13 @@ void getFingerPositions(bool calibrating, bool reset){
   //if during the calibration sequence, make sure to update max and mins
   if (calibrating){
     for (int i = 0; i <10; i++){
-      if (rawFingers[i] > maxFingers[i])
+      if (rawFingers[i] < 4094 && rawFingers[i] > maxFingers[i])
         #if CLAMP_SENSORS
           maxFingers[i] = ( rawFingers[i] <= CLAMP_MAX )? rawFingers[i] : CLAMP_MAX;
         #else
           maxFingers[i] = rawFingers[i];
         #endif
-      if (rawFingers[i] < minFingers[i])
+      if (rawFingers[i] > 0 && rawFingers[i] < minFingers[i])
         #if CLAMP_SENSORS
           minFingers[i] = ( rawFingers[i] >= CLAMP_MIN )? rawFingers[i] : CLAMP_MIN;
         #else

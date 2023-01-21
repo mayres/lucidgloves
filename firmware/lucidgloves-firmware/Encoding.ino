@@ -64,11 +64,11 @@ char* encode(int* flexion, int joyX, int joyY, bool joyClick, bool triggerButton
 
 //legacy decoding
 void decodeData(char* stringToDecode, int* hapticLimits){
-  hapticLimits[0] = getArgument(stringToDecode, 'A'); //thumb
-  hapticLimits[1] = getArgument(stringToDecode, 'B'); //index
-  hapticLimits[2] = getArgument(stringToDecode, 'C'); //middle
-  hapticLimits[3] = getArgument(stringToDecode, 'D'); //ring
-  hapticLimits[4] = getArgument(stringToDecode, 'E'); //pinky
+  hapticLimits[0] = min(THUMB_SERV_MIN + getArgument(stringToDecode, 'A'), 1000); //thumb
+  hapticLimits[1] = min(INDEX_SERV_MIN + getArgument(stringToDecode, 'B'), 1000); //index
+  hapticLimits[2] = min(MIDDLE_SERV_MIN + getArgument(stringToDecode, 'C'), 1000); //middle
+  hapticLimits[3] = min(RING_SERV_MIN + getArgument(stringToDecode, 'D'), 1000); //ring
+  hapticLimits[4] = min(PINKY_SERV_MIN + getArgument(stringToDecode, 'E'), 1000); //pinky
   //Serial.println("Haptic: "+ (String)hapticLimits[0] + " " + (String)hapticLimits[1] + " " + (String)hapticLimits[2] + " " + (String)hapticLimits[3] + " " + (String)hapticLimits[4] + " ");
 }
 
