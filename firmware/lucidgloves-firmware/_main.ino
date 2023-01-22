@@ -6,9 +6,13 @@
   #error "You can't set your calibration pin to 0 over usb. You can calibrate with the BOOT button when using bluetooth only. Set CalibOverride to true to override this."
 #endif
 
+bool calibReset = false;
+unsigned long calibTime = 0;
+unsigned long calibClearTime = 0;
 bool calibrate = false;
 bool calibButton = false;
 int* fingerPos = (int[]){0,0,0,0,0,0,0,0,0,0};
+int* debugData = (int[]){0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 ICommunication* comm;
 
@@ -45,7 +49,12 @@ void getInputs(void* parameter){
 int loops = 0;
 void setup() {
 
-  pinMode(32, INPUT_PULLUP);
+  pinMode(MUX_INPUT, INPUT);
+
+/*   #define PINS_MUX_SELECT     26,  
+                              25, 
+                              33, 
+                              32 */
   
   #if COMMUNICATION == COMM_SERIAL
     comm = new SerialCommunication();
@@ -100,15 +109,32 @@ void loop() {
     latch = false;
   
   if (comm->isOpen()){
-    #if USING_CALIB_PIN
-    calibButton = getButton(PIN_CALIB) != INVERT_CALIB;
-    //Serial.println(getButton(PIN_CALIB));
-    if (calibButton)
-      loops = 0;
-    #else
-    calibButton = false;
-    #endif
+    calibReset = getButton(PIN_CALIB) != INVERT_CALIB;
 
+    if(calibReset) {
+      loops = 0;
+      if(calibTime == 0) {
+        calibTime = millis();
+      }
+      else {
+        if(millis() - calibTime > 5000) { // 5 seconds til the full calib is called.
+           calibButton = true;                    
+        }
+      }
+    } else {      
+      calibTime = 0; 
+      if(calibButton) {
+        if(calibClearTime == 0) {
+          calibClearTime = millis();
+        }
+        else {
+          if(millis() - calibClearTime > 2000) { // 2 seconds for everyone to pick it up
+            calibButton = false;
+            calibClearTime = 0;
+          }
+        }
+      }
+    }
 
     //bool calibrate = false;
     if (loops < CALIBRATION_LOOPS || ALWAYS_CALIBRATING){
@@ -146,6 +172,7 @@ void loop() {
     #endif
 
     int fingerPosCopy[10];
+    int debugCopy[15];
     int mutexTimeDone;
     bool menuButton = getButton(PIN_MENU_BTN) != INVERT_MENU;
     {
@@ -158,6 +185,9 @@ void loop() {
       //memcpy(fingerPosCopy, fingerPos, sizeof(fingerPos));
       for (int i = 0; i < 10; i++){
         fingerPosCopy[i] = fingerPos[i];
+      }
+      for (int i = 0; i < 15; i++){
+        debugCopy[i] = debugData[i];
       }
       #if ESP32_DUAL_CORE_SET
       fingerPosLock->unlock();
@@ -172,6 +202,7 @@ void loop() {
     aButton = false; 
     bButton = false;
 
+   //comm->output(debugout(debugCopy));
     comm->output(encode(fingerPosCopy, getJoyX(), getJoyY(), joyButton, triggerButton, aButton, bButton, grabButton, pinchButton, calibButton, menuButton));
     #if USING_FORCE_FEEDBACK
       char received[100];

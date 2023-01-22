@@ -15,6 +15,30 @@ struct outputData{
 };
 */
 
+char* debugSig(int sinRaw, int cosRaw, int sinMin, int sinMax, int cosMin, int cosMax, double sinScaled, double cosScaled, double angleRaw, double angleOrigin, double totalAngle, int indeg, int scaletot) {
+  static char stringToEncode[200];
+  sprintf(stringToEncode, "SIN[%d,%d,%d,%.3f] COS[%d,%d,%d,%.3f] ANG[%.3f,%.3f] TOTANG[%.3f, %d, %d]\n", sinRaw, sinMin, sinMax, sinScaled, cosRaw,  cosMin, cosMax, cosScaled, angleRaw, angleOrigin, totalAngle, indeg, scaletot);
+  return stringToEncode;
+}
+
+char* debugFingerPos(int rawFinger, int minFinger, int maxFinger, int fingerPos) {
+  static char stringToEncode[100];
+  sprintf(stringToEncode, "raw[%d] min[%d] max[%d] Final[%d]\n", rawFinger, minFinger, maxFinger, fingerPos);
+  return stringToEncode;
+}
+
+char* debugout(int* data) {
+  static char stringToEncode[200];
+
+  sprintf(stringToEncode, "T[%4d %4d %4d] I[%4d %4d %4d] M[%4d %4d %4d] R[%4d %4d %4d] P[%4d %4d %4d]\n", 
+  data[0], data[5], data[10], data[1], data[6], data[11], data[2], data[7], data[12], data[3],data[8], data[13], data[14], data[9], data[14]);
+
+//  sprintf(stringToEncode, "T=%4d I=%4d M=%4d R=%4d P=%4d   T=%4d I=%4d M=%4d R=%4d P=%4d   T=%4d I=%4d M=%4d R=%4d P=%4d\n", 
+//  data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9],data[10], data[11], data[12], data[13], data[14]);
+  return stringToEncode;
+}
+
+
 #if ENCODING == ENCODING_LEGACY
 //legacy encoding
 char* encode(int* flexion, int joyX, int joyY, bool joyClick, bool triggerButton, bool aButton, bool bButton, bool grab, bool pinch, bool calib, bool menu){

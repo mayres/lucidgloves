@@ -64,6 +64,7 @@ int minFingers[10] = {ANALOG_MAX, ANALOG_MAX, ANALOG_MAX, ANALOG_MAX, ANALOG_MAX
 
 
   int totalOffset1[5] = {0,0,0,0,0};
+  double startAngle[5] = {0,0,0,0,0};
 #endif
 
 void setupInputs(){
@@ -219,8 +220,57 @@ int readMux(byte pin){
       break;
   }
   delayMicroseconds(MULTIPLEXER_DELAY);
-  //analogRead(MUX_INPUT);
-  return analogRead(MUX_INPUT);
+  int rC = analogRead(MUX_INPUT);
+
+  int retInt = analogRead(MUX_INPUT);
+  switch(MUX(pin)) {
+    case PIN_THUMB:
+      debugData[0] = retInt;    
+      break;
+    case PIN_INDEX:
+      debugData[1] = retInt;    
+      break;
+    case PIN_MIDDLE:
+      debugData[2] = retInt;    
+      break;
+    case PIN_RING:
+      debugData[3] = retInt;    
+      break;
+    case PIN_PINKY:
+      debugData[4] = retInt;    
+      break;
+    case PIN_THUMB_SECOND:
+      debugData[5] = retInt;    
+      break;
+    case PIN_INDEX_SECOND:
+      debugData[6] = retInt;    
+      break;
+    case PIN_MIDDLE_SECOND:
+      debugData[7] = retInt;    
+      break;
+    case PIN_RING_SECOND:
+      debugData[8] = retInt;    
+      break;
+    case PIN_PINKY_SECOND:
+      debugData[9] = retInt;    
+      break;
+    case PIN_THUMB_SPLAY:
+      debugData[10] = retInt;    
+      break;
+    case PIN_INDEX_SPLAY:
+      debugData[11] = retInt;    
+      break;
+    case PIN_MIDDLE_SPLAY:
+      debugData[12] = retInt;    
+      break;
+    case PIN_RING_SPLAY:
+      debugData[13] = retInt;    
+      break;
+    case PIN_PINKY_SPLAY:
+      debugData[14] = retInt;    
+      break;
+  }
+  return retInt;
 }
 #endif
 
@@ -392,15 +442,27 @@ int sinCosMix(int sinPin, int cosPin, int i){
 
 
   //trigonometry stuffs
-  double angleRaw = atan2(sinScaled, cosScaled);
+  double angleRaw = -atan2(sinScaled, cosScaled);
 
+  if(calibReset) {
+    startAngle[i] = angleRaw;
+    totalOffset1[i] = 0;
+  }
+
+  double angleOrigin = angleRaw - startAngle[i];
   //counting rotations
   if (((angleRaw > 0) != atanPositive[i]) && sinScaled > cosScaled){
     totalOffset1[i] += atanPositive[i]?1:-1;
   }
   atanPositive[i] = angleRaw > 0;
-  double totalAngle = angleRaw + 2*PI * totalOffset1[i];
+  double totalAngle = angleOrigin + 2*PI * totalOffset1[i];
   
+  int totindeg = totalAngle * RAD_TO_DEG;
+  int scaletotal = map(totindeg, -45, 225, 0, ANALOG_MAX);
+
+  if(i == 4) {
+    comm->output(debugSig(sinRaw, cosRaw, sinMin[i], sinMax[i], cosMin[i], cosMax[i], sinScaled, cosScaled, angleRaw, angleOrigin, totalAngle, totindeg, scaletotal));
+  } 
 
   return (int)(totalAngle * ANALOG_MAX);
   
