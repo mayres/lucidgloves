@@ -274,6 +274,11 @@ int readMux(byte pin){
 }
 #endif
 
+double mapDouble(double x, double in_min, double in_max, double out_min, double out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 void getFingerPositions(bool calibrating, bool reset){
   #if FLEXION_MIXING == MIXING_NONE //no mixing, just linear
   int rawFingersFlexion[5] = {NO_THUMB?0:analogPinRead(PIN_THUMB), analogPinRead(PIN_INDEX), analogPinRead(PIN_MIDDLE), analogPinRead(PIN_RING), analogPinRead(PIN_PINKY)};
@@ -443,28 +448,14 @@ int sinCosMix(int sinPin, int cosPin, int i){
 
   //trigonometry stuffs
   double angleRaw = -atan2(sinScaled, cosScaled);
+  int scaletotal = mapDouble(angleRaw, -PI, PI, 0, ANALOG_MAX);
+  int totindeg = angleRaw * RAD_TO_DEG;
 
-  if(calibReset) {
-    startAngle[i] = angleRaw;
-    totalOffset1[i] = 0;
-  }
-
-  double angleOrigin = angleRaw - startAngle[i];
-  //counting rotations
-  if (((angleRaw > 0) != atanPositive[i]) && sinScaled > cosScaled){
-    totalOffset1[i] += atanPositive[i]?1:-1;
-  }
-  atanPositive[i] = angleRaw > 0;
-  double totalAngle = angleOrigin + 2*PI * totalOffset1[i];
-  
-  int totindeg = totalAngle * RAD_TO_DEG;
-  int scaletotal = map(totindeg, -45, 225, 0, ANALOG_MAX);
-
-  if(i == 4) {
-    comm->output(debugSig(sinRaw, cosRaw, sinMin[i], sinMax[i], cosMin[i], cosMax[i], sinScaled, cosScaled, angleRaw, angleOrigin, totalAngle, totindeg, scaletotal));
+  if(debugenabled && i == debugint) {
+    comm->output(debugSig(sinRaw, cosRaw, sinMin[i], sinMax[i], cosMin[i], cosMax[i], sinScaled, cosScaled, angleRaw, totindeg, scaletotal));
   } 
 
-  return (int)(totalAngle * ANALOG_MAX);
+  return totindeg;
   
 }
 #endif

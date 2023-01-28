@@ -74,35 +74,35 @@
   #define PIN_CALIB     22 //button for recalibration (You can set this to GPIO0 to use the BOOT button, but only when using Bluetooth.)
   #define DEBUG_LED 21
 
-  #define PIN_PINKY_MOTOR     19  //used for force feedback
-  #define PIN_RING_MOTOR      18 //^
+  #define PIN_PINKY_MOTOR     16  //used for force feedback
+  #define PIN_RING_MOTOR      17  //^
   #define PIN_MIDDLE_MOTOR    5 //^
-  #define PIN_INDEX_MOTOR     17 //^
-  #define PIN_THUMB_MOTOR     16 //^
+  #define PIN_INDEX_MOTOR     18  //^
+  #define PIN_THUMB_MOTOR     19  //^
   #define PIN_MENU_BTN        34
 
   #define FLEXION_MIXING MIXING_SINCOS
 
   //To use a pin on the multiplexer, use MUX(pin). So for example pin 15 on a mux would be MUX(15).
-  #define PIN_PINKY         MUX(2) //These 5 are for flexion
+  #define PIN_PINKY         MUX(0) //These 5 are for flexion
   #define PIN_PINKY_SPLAY   MUX(1)
-  #define PIN_PINKY_SECOND  MUX(0) 
+  #define PIN_PINKY_SECOND  MUX(2) 
 
-  #define PIN_RING          MUX(5)
+  #define PIN_RING          MUX(3)
   #define PIN_RING_SPLAY    MUX(4)
-  #define PIN_RING_SECOND   MUX(3)
+  #define PIN_RING_SECOND   MUX(5)
   
-  #define PIN_MIDDLE        MUX(8)
+  #define PIN_MIDDLE        MUX(6)
   #define PIN_MIDDLE_SPLAY  MUX(7)
-  #define PIN_MIDDLE_SECOND MUX(6)
+  #define PIN_MIDDLE_SECOND MUX(8)
   
-  #define PIN_INDEX         MUX(11)
+  #define PIN_INDEX         MUX(9)
   #define PIN_INDEX_SPLAY   MUX(10)
-  #define PIN_INDEX_SECOND  MUX(9)
+  #define PIN_INDEX_SECOND  MUX(11)
  
-  #define PIN_THUMB         MUX(14)
+  #define PIN_THUMB         MUX(12)
   #define PIN_THUMB_SPLAY   MUX(13)
-  #define PIN_THUMB_SECOND  MUX(12)
+  #define PIN_THUMB_SECOND  MUX(14)
 
   //Select pins for multiplexers, set as needed if using a mux. You can add or remove pins as needed depending on how many select pins your mux needs.
   #define PINS_MUX_SELECT     26,  /*S0 pin*/ \

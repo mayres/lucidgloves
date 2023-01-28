@@ -14,10 +14,12 @@ struct outputData{
   int* hapticLimits;
 };
 */
+int debugint = 0;
+boolean debugenabled = false;
 
-char* debugSig(int sinRaw, int cosRaw, int sinMin, int sinMax, int cosMin, int cosMax, double sinScaled, double cosScaled, double angleRaw, double angleOrigin, double totalAngle, int indeg, int scaletot) {
+char* debugSig(int sinRaw, int cosRaw, int sinMin, int sinMax, int cosMin, int cosMax, double sinScaled, double cosScaled, double angleRaw, int indeg, int scaletot) {
   static char stringToEncode[200];
-  sprintf(stringToEncode, "SIN[%d,%d,%d,%.3f] COS[%d,%d,%d,%.3f] ANG[%.3f,%.3f] TOTANG[%.3f, %d, %d]\n", sinRaw, sinMin, sinMax, sinScaled, cosRaw,  cosMin, cosMax, cosScaled, angleRaw, angleOrigin, totalAngle, indeg, scaletot);
+  sprintf(stringToEncode, "SIN[%d,%d,%d,%.3f] COS[%d,%d,%d,%.3f] ANG[%.3f, %d, %d]\n", sinRaw, sinMin, sinMax, sinScaled, cosRaw,  cosMin, cosMax, cosScaled, angleRaw, indeg, scaletot);
   return stringToEncode;
 }
 

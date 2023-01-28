@@ -6,9 +6,6 @@
   #error "You can't set your calibration pin to 0 over usb. You can calibrate with the BOOT button when using bluetooth only. Set CalibOverride to true to override this."
 #endif
 
-bool calibReset = false;
-unsigned long calibTime = 0;
-unsigned long calibClearTime = 0;
 bool calibrate = false;
 bool calibButton = false;
 int* fingerPos = (int[]){0,0,0,0,0,0,0,0,0,0};
@@ -109,32 +106,7 @@ void loop() {
     latch = false;
   
   if (comm->isOpen()){
-    calibReset = getButton(PIN_CALIB) != INVERT_CALIB;
-
-    if(calibReset) {
-      loops = 0;
-      if(calibTime == 0) {
-        calibTime = millis();
-      }
-      else {
-        if(millis() - calibTime > 5000) { // 5 seconds til the full calib is called.
-           calibButton = true;                    
-        }
-      }
-    } else {      
-      calibTime = 0; 
-      if(calibButton) {
-        if(calibClearTime == 0) {
-          calibClearTime = millis();
-        }
-        else {
-          if(millis() - calibClearTime > 2000) { // 2 seconds for everyone to pick it up
-            calibButton = false;
-            calibClearTime = 0;
-          }
-        }
-      }
-    }
+    calibButton = getButton(PIN_CALIB) != INVERT_CALIB;
 
     //bool calibrate = false;
     if (loops < CALIBRATION_LOOPS || ALWAYS_CALIBRATING){
@@ -209,9 +181,13 @@ void loop() {
       if (comm->readData(received)){
         int hapticLimits[5];
         //This check is a temporary hack to fix an issue with haptics on v0.5 of the driver, will make it more snobby code later
-        if(String(received).length() >= 10) {
+        int len = String(received).length();
+        if(len >= 10 && len <=25 && received[0] == 'A') {
            decodeData(received, hapticLimits);
            writeServoHaptics(hapticLimits); 
+        } else if(received[0] == 'D') {
+          debugenabled = true;
+          debugint = getArgument(received, 'D');
         }
       }
     #endif
