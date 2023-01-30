@@ -355,12 +355,22 @@ bool getButton(byte pin){
   return digitalRead(pin) != HIGH;
 }
 
+
+double rat(int top, int bot) {
+  double v = (double)top / bot;
+  v = v * 4095;
+  return v;
+}
+
 #if FLEXION_MIXING == MIXING_SINCOS
 //mixing
 int sinCosMix(int sinPin, int cosPin, int i){
 
+  int vcc1 = analogPinRead(PIN_VCC);
   int sinRaw = analogPinRead(sinPin);
+  int vcc2 = analogPinRead(PIN_VCC);
   int cosRaw = analogPinRead(cosPin);
+  int vcc3 = analogPinRead(PIN_VCC);
 
 
   #if INTERFILTER_MODE != INTERFILTER_NONE
@@ -376,6 +386,13 @@ int sinCosMix(int sinPin, int cosPin, int i){
     int sinCalib = sinRaw;
     int cosCalib = cosRaw;
   #endif 
+
+   if(debugEnabled && i == 0) {
+    comm->output(debugHallSig(sinRaw, cosRaw));
+//    comm->output(debugHall(rat(sinRaw,vcc1), rat(sinRaw,vcc2), rat(cosRaw,vcc2), rat(cosRaw,vcc3))); // sinRaw, cosRaw, vcc1, vcc2, vcc3));
+    return 0;
+  } 
+
 
   #if INTERMEDIATE_CALIBRATION
   //scaling

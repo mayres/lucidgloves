@@ -15,6 +15,41 @@ struct outputData{
 };
 */
 
+int debugint = 0;
+boolean debugenabled = false;
+
+char* debugSig(int sinRaw, int cosRaw, int sinMin, int sinMax, int cosMin, int cosMax, double sinScaled, double cosScaled, double angleRaw, int indeg, int scaletot) {
+  static char stringToEncode[200];
+  sprintf(stringToEncode, "SIN[%d,%d,%d,%.3f] COS[%d,%d,%d,%.3f] ANG[%.3f, %d, %d]\n", sinRaw, sinMin, sinMax, sinScaled, cosRaw,  cosMin, cosMax, cosScaled, angleRaw, indeg, scaletot);
+  return stringToEncode;
+}
+
+char* debugHall(double s1, double s2, double c1, double c2) {
+  static char stringToEncode[150];
+//  sprintf(stringToEncode, "VCC1:%d SIN:%d VCC2:%d COS:%d VCC3:%d\n", vcc1, sinRaw, vcc2, cosRaw, vcc3);
+  sprintf(stringToEncode, "SIN1:%4.3f SIN2:%4.3f COS1:%4.3f COS2:%4.3f\n", s1, s2, c1, c2);
+  return stringToEncode;
+}
+
+char* debugHallSig(int sinRaw, int cosRaw) { //, int vcc1, int vcc2, int vcc3
+  static char stringToEncode[150];
+  sprintf(stringToEncode, "SIN:%d COS:%d\n", sinRaw, cosRaw);
+//  sprintf(stringToEncode, "VCC1:%d SIN:%d VCC2:%d COS:%d VCC3:%d\n", vcc1, sinRaw, vcc2, cosRaw, vcc3);
+//  sprintf(stringToEncode, "SIN1:%4.3f SIN2:%4.3f COS1:%4.3f COS2:%4.3f\n", rat(sinRaw,vcc1), rat(sinRaw,vcc2), rat(cosRaw,vcc2), rat(cosRaw,vcc3));
+  return stringToEncode;
+}
+
+char* debugout(int* data) {
+  static char stringToEncode[200];
+
+  sprintf(stringToEncode, "T[%4d %4d %4d] I[%4d %4d %4d] M[%4d %4d %4d] R[%4d %4d %4d] P[%4d %4d %4d]\n", 
+  data[0], data[5], data[10], data[1], data[6], data[11], data[2], data[7], data[12], data[3],data[8], data[13], data[14], data[9], data[14]);
+
+//  sprintf(stringToEncode, "T=%4d I=%4d M=%4d R=%4d P=%4d   T=%4d I=%4d M=%4d R=%4d P=%4d   T=%4d I=%4d M=%4d R=%4d P=%4d\n", 
+//  data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9],data[10], data[11], data[12], data[13], data[14]);
+  return stringToEncode;
+}
+
 #if ENCODING == ENCODING_LEGACY
 //legacy encoding
 char* encode(int* flexion, int joyX, int joyY, bool joyClick, bool triggerButton, bool aButton, bool bButton, bool grab, bool pinch, bool calib, bool menu){

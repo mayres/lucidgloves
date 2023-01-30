@@ -9,6 +9,8 @@
 bool calibrate = false;
 bool calibButton = false;
 int* fingerPos = (int[]){0,0,0,0,0,0,0,0,0,0};
+int* debugData = (int[]){0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+boolean debugEnabled = true;
 
 ICommunication* comm;
 
@@ -146,6 +148,7 @@ void loop() {
     #endif
 
     int fingerPosCopy[10];
+    int debugCopy[15];
     int mutexTimeDone;
     bool menuButton = getButton(PIN_MENU_BTN) != INVERT_MENU;
     {
@@ -159,13 +162,16 @@ void loop() {
       for (int i = 0; i < 10; i++){
         fingerPosCopy[i] = fingerPos[i];
       }
+      for (int i = 0; i < 15; i++){
+        debugCopy[i] = debugData[i];
+      }
       #if ESP32_DUAL_CORE_SET
       fingerPosLock->unlock();
       #endif
       
     }
-
-    comm->output(encode(fingerPosCopy, getJoyX(), getJoyY(), joyButton, triggerButton, aButton, bButton, grabButton, pinchButton, calibButton, menuButton));
+   //comm->output(debugout(debugCopy));
+    //comm->output(encode(fingerPosCopy, getJoyX(), getJoyY(), joyButton, triggerButton, aButton, bButton, grabButton, pinchButton, calibButton, menuButton));
     #if USING_FORCE_FEEDBACK
       char received[100];
       if (comm->readData(received)){
